@@ -23,6 +23,12 @@ For step-by-step installation and environment setup, see [SETUP.md](SETUP.md).
 python3 -m venv .venv
 source .venv/bin/activate
 uv pip install cookiecutter
+
+If you don't have `uv` installed yet, you can install it with the official installer script (macOS/Linux):
+
+```bash
+curl -Ls https://astral.sh/uv/install.sh | sh
+```
 ```
 
 **Other platforms:**
@@ -54,12 +60,13 @@ You'll be prompted for:
 ### After Generation
 
 1. `cd your_project_slug`
-2. `cp .env.example .env` and fill in your API keys
-3. `uv sync` to install dependencies
-4. Edit `src/<package>/tools/data_source.py` — replace the stub with your data source
-5. Edit `src/<package>/prompts/prompts.py` — customize prompts for your domain
-6. Edit `src/<package>/states/state.py` — add fields specific to your agent
-7. `python main.py` to run
+2. Install `uv` if needed: `py -m pip install uv` on Windows PowerShell or `python3 -m pip install uv` on macOS/Linux
+3. `cp .env.example .env` and fill in your API keys
+4. `uv sync` to install dependencies
+5. Edit `src/<package>/tools/data_source.py` — replace the stub with your data source
+6. Edit `src/<package>/prompts/prompts.py` — customize prompts for your domain
+7. Edit `src/<package>/states/state.py` — add fields specific to your agent
+8. `uv run python main.py` to run
 
 ## Generated Project Structure
 

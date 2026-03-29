@@ -27,6 +27,12 @@ python3 -m pip install --upgrade pip
 python3 -m pip install cookiecutter uv
 ```
 
+Alternatively, you can install `uv` using the official installer script (recommended on macOS/Linux):
+
+```bash
+curl -Ls https://astral.sh/uv/install.sh | sh
+```
+
 Verify the tools are available:
 
 ```bash

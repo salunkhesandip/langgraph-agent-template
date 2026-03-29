@@ -11,6 +11,42 @@
 - **Caching**: In-memory cache to avoid redundant API calls
 - **Retry Logic**: Exponential back-off for resilient API calls
 
+## Quick Start
+
+1. Install `uv` if it is not already available:
+
+	**Windows PowerShell**
+
+	```powershell
+	py -m pip install uv
+	```
+
+	**macOS / Linux (pip)**
+
+	```bash
+	python3 -m pip install uv
+	```
+
+	**macOS / Linux (recommended installer)**
+
+	```bash
+	curl -Ls https://astral.sh/uv/install.sh | sh
+	```
+
+2. Install project dependencies:
+
+	```bash
+	uv sync
+	```
+
+3. Copy `.env.example` to `.env` and add your API key.
+
+4. Run the agent:
+
+	```bash
+	uv run python main.py --query "your input here"
+	```
+
 For installation, environment configuration, and run commands, see [SETUP.md](SETUP.md).
 
 ## Project Structure

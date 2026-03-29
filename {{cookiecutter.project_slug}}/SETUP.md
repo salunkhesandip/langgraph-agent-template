@@ -2,13 +2,16 @@
 
 This guide covers local setup, environment configuration, running the agent, and the first files you will likely customize.
 
+**Quick links:** [Prerequisites](#prerequisites) | [Install `uv`](#install-uv) | [Install dependencies](#install-dependencies) | [Configure credentials](#configure-environment-variables) | [Run the agent](#run-the-agent) | [Troubleshooting](#troubleshooting) | [Next steps](#next-steps)
+
 ## Prerequisites
 
 - Python {{ cookiecutter.python_version }} or newer
 - `pip` available in your shell
-- `uv` installed
+- `uv` installed (the project dependency manager)
+- An API key for {% if cookiecutter.llm_provider == "google_gemini" %}Google Gemini{% elif cookiecutter.llm_provider == "openai" %}OpenAI{% endif %}
 
-Install `uv` if needed:
+## Install `uv`
 
 ### Windows PowerShell
 
@@ -17,30 +20,42 @@ py -m pip install --upgrade pip
 py -m pip install uv
 ```
 
-### macOS or Linux
+Verify: `uv --version`
+
+### macOS or Linux (via pip)
 
 ```bash
 python3 -m pip install --upgrade pip
 python3 -m pip install uv
 ```
 
-## Install Dependencies
+Verify: `uv --version`
 
-From the project root:
+### macOS or Linux (recommended installer)
+
+```bash
+curl -Ls https://astral.sh/uv/install.sh | sh
+```, create a virtual environment and install dependencies:
 
 ```bash
 uv sync
 ```
 
-If you want development tools such as `pytest`, `black`, `isort`, and `mypy`:
+This creates `.venv/` and installs all dependencies from `pyproject.toml`.
+
+To also install development tools (`pytest`, `black`, `isort`, `mypy`):
 
 ```bash
 uv sync --extra dev
 ```
 
-## Configure Environment Variables
+Verify: `uv run python -c "import langgraph; print('LangGraph installed')"`
 
-Create a local `.env` file from `.env.example`.
+If you want development tools such as `pytest`, `black`, `isort`, and `mypy`:
+
+```bash
+uv sync --extra dev
+```the template:
 
 ### Windows PowerShell
 
@@ -54,25 +69,34 @@ Copy-Item .env.example .env
 cp .env.example .env
 ```
 
-Then edit `.env` and set the provider-specific API key:
+Open `.env` in your editor and fill in required credentials:
 
-{% if cookiecutter.llm_provider == "google_gemini" %}- `GOOGLE_API_KEY` for Google Gemini
-{% elif cookiecutter.llm_provider == "openai" %}- `OPENAI_API_KEY` for OpenAI
-{% endif %}
+**Required:**
+
+{% if cookiecutter.llm_provider == "google_gemini" %}- `GOOGLE_API_KEY`: Get from [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+{% elif cookiecutter.llm_provider == "openai" %}- `OPENAI_API_KEY`: Get from [OpenAI Platform](https://platform.openai.com/api-keys)
+
+{% endif %}**Optional:**
+
+- `LOG_FILE=logs/agent.log` — write logs to disk in addition to console
+- `LANGCHAIN_TRACING_V2=true` — enable LangSmith observability
 
 Optional:
 
 - set `LOG_FILE=logs/agent.log` to also write logs to disk
+All commands use `uv run` to execute in the managed environment.
 
-## Run the Agent
+Run with a custom query:
 
-Run the default workflow:
+```bash
+uv run python main.py --query "your input here"
+```
+
+Run with default settings:
 
 ```bash
 uv run python main.py
-```
-
-Run with a query:
 
 ```bash
 uv run python main.py --query "your input here"
@@ -98,15 +122,29 @@ This generated project is a scaffold. In most cases you should update these area
 
 ### `uv` command not found
 
-Reinstall `uv` with the Python interpreter used by your shell, then reopen the terminal.
+- Close and reopen your terminal to refresh PATH.
+- If still missing, reinstall `uv` and follow the PATH setup instructions from the installer.
 
 ### Missing API key error
 
-Make sure your `.env` file exists and includes the correct provider-specific key.
+```
+ValueError: Please set GOOGLE_API_KEY environment variable
+```
+
+- Verify `.env` exists in the project root.
+- Check that the key value is correct (no extra quotes or spaces).
+- Reload your shell environment.
+
+### Python version mismatch
+
+If `uv sync` fails with a Python version error:
+
+- Check your Python version: `python --version`
+- Install Python {{ cookiecutter.python_version }}+ if needed before running `uv sync`.
 
 ### Dependency installation issues
 
-Try refreshing the lock and reinstalling:
+To refresh the lock file and reinstall:
 
 ```bash
 uv sync --refresh
@@ -114,4 +152,26 @@ uv sync --refresh
 
 ### Test command cannot find the package
 
-Check that you are running commands from the project root and that `src/{{ cookiecutter.package_name }}` matches the generated package name.
+- Ensure you are running from the project root: `ls pyproject.toml`
+- Verify the package folder exists: `ls src/{{ cookiecutter.package_name }}/`
+
+## Next Steps
+
+**Before running the agent, customize these files:**
+
+1. **Data source** — `src/{{ cookiecutter.package_name }}/tools/data_source.py`  
+   Replace the stub `fetch_data()` with your actual data source.
+
+2. **State** — `src/{{ cookiecutter.package_name }}/states/state.py`  
+   Add fields to hold your domain-specific data.
+
+3. **Prompts** — `src/{{ cookiecutter.package_name }}/prompts/prompts.py`  
+   Customize `SYSTEM_PROMPT` and `SUMMARY_PROMPT_TEMPLATE`.
+
+4. **Graph** — `src/{{ cookiecutter.package_name }}/agent/graph.py`  
+   Modify nodes, add conditional edges, or integrate external tools.
+
+5. **Config** — `src/{{ cookiecutter.package_name }}/config.py`  
+   Adjust timeouts, retry limits, and other tuning parameters.
+
+**See also:** [README.md](README.md) for feature overview and project structure.
