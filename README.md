@@ -10,6 +10,8 @@ This template provides a production-ready structure for building AI agents with:
 - **Chunking & merging** for large inputs
 - **Caching & retry logic** for resilient API calls
 
+For step-by-step installation and environment setup, see [SETUP.md](SETUP.md).
+
 ## Usage
 
 ### Install Cookiecutter
@@ -66,10 +68,11 @@ your_project_slug/
 ├── main.py                          # Entry point
 ├── examples.py                      # Usage examples
 ├── pyproject.toml                   # Dependencies & build config
-├── langgraph.json                   # LangGraph configuration
+├── langgraph.json                   # LangGraph Studio / deployment config
 ├── .env.example                     # Environment variable template
 ├── .gitignore
 ├── README.md
+├── SETUP.md                         # Setup guide for the generated project
 └── src/
     └── your_package_name/
         ├── __init__.py
@@ -82,7 +85,7 @@ your_project_slug/
         │   └── prompts.py           # LLM prompt templates
         ├── states/
         │   ├── __init__.py
-        │   └── state.py             # Pydantic state definitions
+        │   └── state.py             # TypedDict state with reducers
         ├── tools/
         │   ├── __init__.py
         │   └── data_source.py       # Data fetching (TODO: customize)
@@ -92,6 +95,7 @@ your_project_slug/
         │   └── ...                  # Your custom utilities
         └── tests/
             ├── __init__.py
+            ├── conftest.py          # Shared fixtures
             └── test_agent.py        # Unit tests
 ```
 

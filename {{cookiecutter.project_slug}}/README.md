@@ -11,6 +11,8 @@
 - **Caching**: In-memory cache to avoid redundant API calls
 - **Retry Logic**: Exponential back-off for resilient API calls
 
+For installation, environment configuration, and run commands, see [SETUP.md](SETUP.md).
+
 ## Project Structure
 
 ```
@@ -21,50 +23,6 @@ src/{{ cookiecutter.package_name }}/
 ├── prompts/         # LLM prompt templates
 ├── utils/           # Helper utilities (credentials)
 └── tests/           # Unit tests
-```
-
-## Setup
-
-### Prerequisites
-
-Install `uv`:
-```bash
-pip install uv
-```
-
-### Install Dependencies
-
-```bash
-uv sync
-```
-
-Or with development tools:
-```bash
-uv sync --all-extras
-```
-
-### Configure Environment
-
-```bash
-cp .env.example .env
-# Edit .env with your API keys and settings
-```
-
-### Run
-
-```bash
-python main.py
-```
-
-With a query parameter:
-```bash
-python main.py --query "your input here"
-```
-
-### Run Tests
-
-```bash
-pytest src/{{ cookiecutter.package_name }}/tests/ -v
 ```
 
 ## Customization Guide

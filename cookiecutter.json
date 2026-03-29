@@ -1,11 +1,11 @@
 {
-    "project_name": "My AI Agent [e.g. Document Analyzer]",
+    "project_name": "My AI Agent",
     "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_').replace('-', '_') }}",
     "package_name": "{{ cookiecutter.project_slug }}",
-    "description": "A LangGraph AI agent [e.g. Analyzes PDFs and extracts key insights]",
-    "author_name": "Your Name [e.g. John Doe, Acme Corp]",
-    "python_version": "3.12 [e.g. 3.10, 3.11, 3.12]",
+    "description": "A LangGraph AI agent",
+    "author_name": "Your Name",
+    "python_version": "3.12",
     "llm_provider": ["google_gemini", "openai"],
-    "llm_model": "models/gemini-2.5-flash [e.g. gpt-4, models/gemini-2.0-flash]",
-    "default_temperature": "0.7 [e.g. 0.3=factual, 0.7=balanced, 0.9=creative]"
+    "llm_model": "models/gemini-2.5-flash",
+    "default_temperature": "0.7"
 }

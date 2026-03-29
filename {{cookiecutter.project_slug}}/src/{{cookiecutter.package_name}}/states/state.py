@@ -1,27 +1,34 @@
-"""Agent state definitions."""
+"""Agent state definitions.
 
-from typing import Optional
-from pydantic import BaseModel
+LangGraph nodes receive this state as a dict and return partial updates.
+The framework merges updates into the state automatically.
+Use Annotated types with reducers (e.g. operator.add) for fields that
+should accumulate values across nodes instead of being replaced.
+"""
+
+import operator
+from typing import Annotated, Optional
+from typing_extensions import TypedDict
 
 
-class AgentState(BaseModel):
+class AgentState(TypedDict, total=False):
     """State for the {{ cookiecutter.project_name }} agent.
 
     Customize this state class to hold all the data your agent needs
     as it flows through the graph nodes.
     """
 
-    query: str = ""
-    """Input query or parameter for the agent"""
+    # Input query or parameter for the agent
+    query: str
 
-    data: list[dict] = []
-    """List of data items fetched from the external source"""
+    # Fetched data items — uses add reducer so multiple fetches accumulate
+    data: Annotated[list[dict], operator.add]
 
-    raw_text: Optional[str] = None
-    """Formatted text representation of the data for LLM processing"""
+    # Formatted text representation for LLM processing
+    raw_text: Optional[str]
 
-    summary: Optional[str] = None
-    """Generated summary or output from LLM processing"""
+    # Generated summary or output from LLM processing
+    summary: Optional[str]
 
-    error: Optional[str] = None
-    """Error message if any step fails"""
+    # Error message if any step fails
+    error: Optional[str]

@@ -1,8 +1,11 @@
-"""LangGraph agent workflow for {{ cookiecutter.project_name }}."""
+"""LangGraph agent workflow for {{ cookiecutter.project_name }}.
 
-import asyncio
+Nodes receive the full state dict and return **partial updates** (only the
+keys that changed).  LangGraph merges them back automatically.
+"""
+
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from langchain_core.messages import HumanMessage
 {%- if cookiecutter.llm_provider == "google_gemini" %}
@@ -64,8 +67,9 @@ def _get_llm() -> ChatOpenAI:
 
 
 # ── Graph nodes ──────────────────────────────────────────────────────────
+# Each node returns a **partial dict** — only the keys that changed.
 
-def fetch_data_node(state: AgentState) -> AgentState:
+def fetch_data_node(state: AgentState) -> dict:
     """Fetch data from external source.
 
     TODO: Implement your data fetching logic here.
@@ -77,45 +81,40 @@ def fetch_data_node(state: AgentState) -> AgentState:
             logger.warning("Invalid ITEM_LIMIT, using default %d", DEFAULT_ITEM_LIMIT)
             limit = DEFAULT_ITEM_LIMIT
 
-        data = fetch_data(query=state.query, limit=limit)
-        state.data = data
+        data = fetch_data(query=state["query"], limit=limit)
         logger.info("fetch_data_node: %d items loaded", len(data))
-        return state
+        return {"data": data}
 
     except Exception as e:
         logger.error("fetch_data_node failed: %s", e)
-        state.error = f"Failed to fetch data: {e}"
-        return state
+        return {"error": f"Failed to fetch data: {e}"}
 
 
-def format_data_node(state: AgentState) -> AgentState:
+def format_data_node(state: AgentState) -> dict:
     """Format data for LLM processing."""
     try:
-        state.raw_text = format_data_for_llm(state.data)
-        # Drop raw data after formatting
-        state.data = []
+        raw_text = format_data_for_llm(state.get("data", []))
         logger.info(
             "format_data_node: formatted text length = %d chars",
-            len(state.raw_text),
+            len(raw_text),
         )
-        return state
+        return {"raw_text": raw_text}
     except Exception as e:
         logger.error("format_data_node failed: %s", e)
-        state.error = f"Failed to format data: {e}"
-        return state
+        return {"error": f"Failed to format data: {e}"}
 
 
-def process_node(state: AgentState) -> AgentState:
+def process_node(state: AgentState) -> dict:
     """Process data with LLM (summarize, analyze, etc.), with chunking for large inputs."""
     try:
-        if not state.raw_text:
-            state.error = "No content to process"
-            return state
+        raw_text = state.get("raw_text")
+        if not raw_text:
+            return {"error": "No content to process"}
 
         llm = _get_llm()
 
         # ── Chunking: split long inputs into batches ─────────────────
-        lines = state.raw_text.split("\n")
+        lines = raw_text.split("\n")
         blocks: list[str] = []
         current: list[str] = []
         for line in lines:
@@ -128,9 +127,9 @@ def process_node(state: AgentState) -> AgentState:
 
         if len(blocks) <= CHUNK_SIZE:
             # Single-shot processing
-            prompt = get_summary_prompt(state.raw_text)
+            prompt = get_summary_prompt(raw_text)
             response = llm.invoke([HumanMessage(content=prompt)])
-            state.summary = response.content
+            summary = response.content
         else:
             # Chunk → process each → merge
             logger.info(
@@ -147,36 +146,33 @@ def process_node(state: AgentState) -> AgentState:
 
             merge_prompt = get_chunk_merge_prompt(partial_summaries)
             merged = llm.invoke([HumanMessage(content=merge_prompt)])
-            state.summary = merged.content
+            summary = merged.content
 
-        # Drop raw text after processing
-        state.raw_text = None
-        logger.info("process_node: summary generated (%d chars)", len(state.summary))
-        return state
+        logger.info("process_node: summary generated (%d chars)", len(summary))
+        return {"summary": summary, "raw_text": None}
 
     except Exception as e:
         logger.error("process_node failed: %s", e)
-        state.error = f"Failed to process data: {e}"
-        return state
+        return {"error": f"Failed to process data: {e}"}
 
 
-def error_handler_node(state: AgentState) -> AgentState:
+def error_handler_node(state: AgentState) -> dict:
     """Log the error and pass state through."""
-    logger.error("Pipeline error: %s", state.error)
-    return state
+    logger.error("Pipeline error: %s", state.get("error"))
+    return {}
 
 
 def should_process(state: AgentState) -> str:
     """Determine if processing should proceed."""
-    if state.error or not state.data:
+    if state.get("error") or not state.get("data"):
         return "error_handler"
     return "format_data"
 
 
 # ── Graph construction ───────────────────────────────────────────────────
 
-def create_agent_graph() -> StateGraph:
-    """Create the LangGraph workflow."""
+def create_agent_graph():
+    """Create and compile the LangGraph workflow."""
     graph = StateGraph(AgentState)
 
     graph.add_node("fetch_data", fetch_data_node)
@@ -198,7 +194,7 @@ def create_agent_graph() -> StateGraph:
 async def run_agent(
     query: Optional[str] = None,
 ) -> dict:
-    """Run the agent pipeline.
+    """Run the agent pipeline asynchronously.
 
     Args:
         query: Optional input query or parameter
@@ -208,29 +204,14 @@ async def run_agent(
     """
     agent = create_agent_graph()
 
-    initial_state = AgentState(query=query or "")
+    initial_state: AgentState = {"query": query or ""}
 
-    result = agent.invoke(initial_state)
+    result = await agent.ainvoke(initial_state)
     logger.info("Agent graph execution completed")
 
-    response: Dict[str, Any] = _build_response(result)
-
-    return response
-
-
-def _build_response(result: Any) -> Dict[str, Any]:
-    """Build response dictionary from agent result."""
-    if isinstance(result, dict):
-        return {
-            RESP_DATA: result.get("data"),
-            RESP_RAW_TEXT: result.get("raw_text"),
-            RESP_SUMMARY: result.get("summary"),
-            RESP_ERROR: result.get("error"),
-        }
-    else:
-        return {
-            RESP_DATA: result.data,
-            RESP_RAW_TEXT: result.raw_text,
-            RESP_SUMMARY: result.summary,
-            RESP_ERROR: result.error,
-        }
+    return {
+        RESP_DATA: result.get("data"),
+        RESP_RAW_TEXT: result.get("raw_text"),
+        RESP_SUMMARY: result.get("summary"),
+        RESP_ERROR: result.get("error"),
+    }

@@ -41,20 +41,19 @@ def test_format_empty_data():
 
 def test_agent_state():
     """Test AgentState initialization."""
-    state = AgentState(query="test query")
+    state: AgentState = {"query": "test query"}
 
-    assert state.query == "test query"
-    assert state.data == []
-    assert state.summary is None
-    assert state.error is None
+    assert state["query"] == "test query"
+    assert "summary" not in state
+    assert "error" not in state
 
 
 def test_agent_state_with_data(sample_data):
     """Test AgentState with data."""
-    state = AgentState(data=sample_data)
+    state: AgentState = {"data": sample_data}
 
-    assert len(state.data) == 2
-    assert state.data[0]["id"] == "1"
+    assert len(state["data"]) == 2
+    assert state["data"][0]["id"] == "1"
 
 
 if __name__ == "__main__":

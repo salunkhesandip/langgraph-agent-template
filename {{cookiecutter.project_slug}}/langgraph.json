@@ -5,5 +5,8 @@
       "path": "./pyproject.toml"
     }
   ],
+  "graphs": {
+    "agent": "src/{{ cookiecutter.package_name }}/agent/graph.py:create_agent_graph"
+  },
   "pip_installer": "uv"
 }
