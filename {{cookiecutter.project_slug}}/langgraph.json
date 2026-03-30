@@ -1,9 +1,6 @@
 {
   "dependencies": [
-    {
-      "type": "python",
-      "path": "./pyproject.toml"
-    }
+    "./pyproject.toml"
   ],
   "graphs": {
     "agent": "src/{{ cookiecutter.package_name }}/agent/graph.py:create_agent_graph"
